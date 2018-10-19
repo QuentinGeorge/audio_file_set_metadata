@@ -3,8 +3,9 @@
 require './getid3/getid3.php';
 require './getid3/write.php';
 
-define('SHORT_OPTS', 'F:h');
+define('SHORT_OPTS', 'f:h');
 define('LONG_OPTS', array('file:', 'help'));
+define('FILE_NAME_EXCEPT', array('audio', 'video', 'official')); // Those tags will be removed from faile name (ex: [official video])
 
 function getParam ($options, $shortOpts, $longOpts, $default = NULL) {
     foreach ($options as $key => $value) {
@@ -15,6 +16,37 @@ function getParam ($options, $shortOpts, $longOpts, $default = NULL) {
         }
     }
     return $default;
+}
+
+function getTagsFromFileName ($fullPath) {
+    // Get the file name out of the full path
+    $pathSplit = explode('/', $fullPath);
+    $pathLenght = count($pathSplit) - 1;
+    $fileName = $pathSplit[$pathLenght];
+    // Remove file extention (.mp3)
+    $fileName = preg_replace("/\.\S*$/", '', $fileName);
+    // prepare regex for bad tags name remove
+    $regex = "/[\(\[](";
+    foreach (FILE_NAME_EXCEPT as $key => $value) {
+        if ($key < count(FILE_NAME_EXCEPT) - 1) {
+            $regex = $regex . $value . "|";
+        } else {
+            $regex = $regex . $value . ").+?[\)\]]/i";
+        }
+    }
+    // Remove unexpected tags inside of the name (official video, ...)
+    $fileName = preg_replace($regex, '', $fileName);
+    // Explode the string at "-" but only at the first occurence
+    preg_match('/(.+?)\s*-\s*(.+)/', $fileName, $matches);
+    // Get data
+    $title = trim($matches[2]);
+    $artist = trim($matches[1]);
+    $data = array(
+        'title' => array($title),
+        'artist' => array($artist)
+    );
+
+    return $data;
 }
 
 function setMetadata ($file, $tags) {
@@ -53,13 +85,10 @@ function setMetadata ($file, $tags) {
 
 $options = getopt(SHORT_OPTS, LONG_OPTS);
 
-$fileParam = getParam($options, 'F', 'file');
+$fileParam = getParam($options, 'f', 'file');
 $helpParam = getParam($options, 'h', 'help');
 
-$newTags = array(
-    'title' => array('My Song 3'),
-    'artist' => array('The Artist 3')
-);
+$newTags = getTagsFromFileName($fileParam);
 
 setMetadata($fileParam, $newTags);
 ?>
