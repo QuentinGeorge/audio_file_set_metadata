@@ -5,9 +5,10 @@ require './getid3/write.php';
 
 define('SHORT_OPTS', 'f:h');
 define('LONG_OPTS', array('file:', 'help'));
-define('FILE_NAME_EXCEPT', array('audio', 'video', 'official')); // Those tags will be removed from faile name (ex: [official video])
+define('FILE_NAME_EXCEPT', array('audio', 'video', 'official')); // Those tags will be removed from file name (ex: [official video])
+define('OUTPUT_DIR', 'done\\');
 
-function getParam ($options, $shortOpts, $longOpts, $default = NULL) {
+function getParam($options, $shortOpts, $longOpts, $default = NULL) {
     foreach ($options as $key => $value) {
         if ($key === $shortOpts) {
             return $value;
@@ -18,13 +19,22 @@ function getParam ($options, $shortOpts, $longOpts, $default = NULL) {
     return $default;
 }
 
-function getTagsFromFileName ($fullPath) {
+function splitFilePath($file) {
+    $fullPath = realpath($file);
     // Get the file name out of the full path
-    $pathSplit = explode('/', $fullPath);
+    $pathSplit = explode('/', $file);
     $pathLenght = count($pathSplit) - 1;
     $fileName = $pathSplit[$pathLenght];
-    // Remove file extention (.mp3)
+    // Get the path without the file name
+    $path = substr($fullPath, 0, strlen($fullPath) - strlen($fileName));
+    // Get & remove file extention (.mp3)
+    preg_match("/\.\S*$/", $fileName, $fileExt);
     $fileName = preg_replace("/\.\S*$/", '', $fileName);
+
+    return array('path' => $path, 'file' => $fileName, 'ext' => $fileExt[0]);
+}
+
+function getMetaFromFileName($fileName) {
     // prepare regex for bad tags name remove
     $regex = "/[\(\[](";
     foreach (FILE_NAME_EXCEPT as $key => $value) {
@@ -37,19 +47,32 @@ function getTagsFromFileName ($fullPath) {
     // Remove unexpected tags inside of the name (official video, ...)
     $fileName = preg_replace($regex, '', $fileName);
     // Explode the string at "-" but only at the first occurence
-    preg_match('/(.+?)\s*-\s*(.+)/', $fileName, $matches);
+    preg_match("/(.+?)\s*-\s*(.+)/", $fileName, $matches);
     // Get data
     $title = trim($matches[2]);
     $artist = trim($matches[1]);
-    $data = array(
+    $meta = array(
         'title' => array($title),
         'artist' => array($artist)
     );
 
-    return $data;
+    return $meta;
 }
 
-function setMetadata ($file, $tags) {
+function copyAndRenameFile($file, $srcPath, $fileExt, $tags) {
+    $path = $srcPath . OUTPUT_DIR;
+    $newFileName = $tags['artist'][0] . ' - ' . $tags['title'][0] . $fileExt;
+    // If dest directory doesn't exist, create it
+    if (!is_dir($path)) {
+        mkdir($path);
+    }
+    copy($file, $path . $newFileName);
+
+    // Return the new file
+    return $path . $newFileName;
+}
+
+function setMetadata($file, $tags) {
 // This function use id3 script to write mp3 metadata (https://github.com/JamesHeinrich/getID3)
     $textEncoding = 'UTF-8';
 
@@ -88,7 +111,12 @@ $options = getopt(SHORT_OPTS, LONG_OPTS);
 $fileParam = getParam($options, 'f', 'file');
 $helpParam = getParam($options, 'h', 'help');
 
-$newTags = getTagsFromFileName($fileParam);
-
-setMetadata($fileParam, $newTags);
+// Get file canonic path, file name & file extension
+$filePathSplited = splitFilePath($fileParam);
+// Get new metadata from file name
+$newTags = getMetaFromFileName($filePathSplited['file']);
+// Copy file into src dir, rename & get new file
+$newFile = copyAndRenameFile($fileParam, $filePathSplited['path'], $filePathSplited['ext'], $newTags);
+// Set metadata into new file
+setMetadata($newFile, $newTags);
 ?>
