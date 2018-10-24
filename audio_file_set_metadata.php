@@ -26,7 +26,7 @@ function splitFilePath($file) {
     $pathLenght = count($pathSplit) - 1;
     $fileName = $pathSplit[$pathLenght];
     // Get the path without the file name
-    $path = substr($fullPath, 0, strlen($fullPath) - strlen($fileName));
+    $path = substr($fullPath, 0, (strlen($fullPath) - strlen($fileName)) + 1);
     // Get & remove file extention (.mp3)
     preg_match("/\.\S*$/", $fileName, $fileExt);
     $fileName = preg_replace("/\.\S*$/", '', $fileName);
@@ -60,9 +60,10 @@ function getMetaFromFileName($fileName) {
 }
 
 function copyAndRenameFile($file, $srcPath, $fileExt, $tags) {
-    $path = $srcPath . OUTPUT_DIR;
+    $path = $srcPath . "\\" . OUTPUT_DIR;
     $newFileName = $tags['artist'][0] . ' - ' . $tags['title'][0] . $fileExt;
     // If dest directory doesn't exist, create it
+
     if (!is_dir($path)) {
         mkdir($path);
     }
