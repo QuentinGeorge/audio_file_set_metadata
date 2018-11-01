@@ -7,8 +7,9 @@ Ce script va, pour tous les fichiers .mp3 d'un répertoire&nbsp;:
 5. Ajouter les métadonnées pour l'auteur et le titre d'après le nouveau nom du fichier
 
 ## Installation
-1. Installer PHP
-.. Pour Windows&nbsp;:[Télécharger PHP](http://php.net/downloads.php) et Extraire le fichier zip à l'emplacement "C:\php"
+1. Installer PHP  
+Pour Windows&nbsp;:[Télécharger PHP](http://php.net/downloads.php) et Extraire le fichier zip à l'emplacement "C:\php"
+
 2. Télécharger ce script en cliquant sur "Clone or download" => "Download zip" puis Extraire le fichier zip à l'emplacement voulut
 3. Ouvrir le fichier "audio_file_set_metadata.bat" avec un éditeur de texte et à la ligne 2 "set scriptPath=D:\Projects\audio_file_set_metadata\" modifier la partie après le "=" par le chemin de l'emplacement du répertoire "audio_file_set_metadata"
 
