@@ -1,10 +1,10 @@
 #!/usr/bin/php
 <?php
-require './getid3/getid3.php';
-require './getid3/write.php';
+require dirname(__FILE__) . '/getid3/getid3.php';
+require dirname(__FILE__) . '/getid3/write.php';
 
-define('SHORT_OPTS', 'f:h');
-define('LONG_OPTS', array('file:', 'help'));
+define('SHORT_OPTS', 'd:h');
+define('LONG_OPTS', array('dir:', 'help'));
 define('FILE_NAME_EXCEPT', array('audio', 'video', 'official')); // Those tags will be removed from file name (ex: [official video])
 define('OUTPUT_DIR', 'done\\');
 
@@ -19,23 +19,25 @@ function getParam($options, $shortOpts, $longOpts, $default = NULL) {
     return $default;
 }
 
-function splitFilePath($file) {
-    $fullPath = realpath($file);
-    // Get the file name out of the full path
-    $pathSplit = explode('/', $file);
-    $pathLenght = count($pathSplit) - 1;
-    $fileName = $pathSplit[$pathLenght];
-    // Get the path without the file name
-    $path = substr($fullPath, 0, (strlen($fullPath) - strlen($fileName)) + 1);
-    // Get & remove file extention (.mp3)
-    preg_match("/\.\S*$/", $fileName, $fileExt);
-    $fileName = preg_replace("/\.\S*$/", '', $fileName);
+function getMP3Files($dir) {
+    if (!is_dir($dir)) {
+        exit('ERROR: "' . $dir . '" is not a valid directory' . "\n");
+    } else {
+        $mp3Files = array();
+        $dirContent = scandir($dir);
 
-    return array('path' => $path, 'file' => $fileName, 'ext' => $fileExt[0]);
+        foreach ($dirContent as $value) {
+            if (preg_match("/\.mp3$/", $value, $match)) {
+                array_push($mp3Files, $value);
+            }
+        }
+
+        return $mp3Files;
+    }
 }
 
 function getMetaFromFileName($fileName) {
-    // prepare regex for bad tags name remove
+    // Prepare regex for bad tags name remove
     $regex = "/[\(\[](";
     foreach (FILE_NAME_EXCEPT as $key => $value) {
         if ($key < count(FILE_NAME_EXCEPT) - 1) {
@@ -59,11 +61,11 @@ function getMetaFromFileName($fileName) {
     return $meta;
 }
 
-function copyAndRenameFile($file, $srcPath, $fileExt, $tags) {
+function copyAndRenameFile($file, $srcPath, $tags, $fileExt = '.mp3') {
     $path = $srcPath . "\\" . OUTPUT_DIR;
     $newFileName = $tags['artist'][0] . ' - ' . $tags['title'][0] . $fileExt;
-    // If dest directory doesn't exist, create it
 
+    // If dest directory doesn't exist, create it
     if (!is_dir($path)) {
         mkdir($path);
     }
@@ -109,15 +111,20 @@ function setMetadata($file, $tags) {
 
 $options = getopt(SHORT_OPTS, LONG_OPTS);
 
-$fileParam = getParam($options, 'f', 'file');
+$dirParam = getParam($options, 'd', 'dir');
 $helpParam = getParam($options, 'h', 'help');
 
-// Get file canonic path, file name & file extension
-$filePathSplited = splitFilePath($fileParam);
-// Get new metadata from file name
-$newTags = getMetaFromFileName($filePathSplited['file']);
-// Copy file into src dir, rename & get new file
-$newFile = copyAndRenameFile($fileParam, $filePathSplited['path'], $filePathSplited['ext'], $newTags);
-// Set metadata into new file
-setMetadata($newFile, $newTags);
+// Get mp3 files from a directory
+$mp3Files = getMP3Files($dirParam);
+// Process modifications on each files
+foreach ($mp3Files as $value) {
+    // Get file name without extension
+    $fileName = preg_replace("/\.\S*$/", '', $value);
+    // Get new metadata from file name
+    $newTags = getMetaFromFileName($fileName);
+    // Copy file into src dir, rename & get new file
+    $newFile = copyAndRenameFile($value, $dirParam, $newTags);
+    // Set metadata into new file
+    setMetadata($newFile, $newTags);
+}
 ?>
