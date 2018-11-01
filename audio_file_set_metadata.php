@@ -81,7 +81,8 @@ function copyAndRenameFile($file, $srcPath, $tags, $fileExt = '.mp3') {
 }
 
 function setMetadata($file, $tags, $fileName) {
-// This function use id3 script to write mp3 metadata (https://github.com/JamesHeinrich/getID3)
+    $isSucess = FALSE;
+    // This function use id3 script to write mp3 metadata (https://github.com/JamesHeinrich/getID3)
     $textEncoding = 'UTF-8';
 
     // Initialize getID3 engine
@@ -105,6 +106,7 @@ function setMetadata($file, $tags, $fileName) {
 
     // write tags
     if ($tagWriter->WriteTags()) {
+        $isSucess = TRUE;
     	echo str_pad('Successfully wrote tags for:', OUTPUT_MSG_PAD) . $fileName . "\n";
     	if (!empty($tagWriter->warnings)) {
     		echo str_pad('There were some warnings for:', OUTPUT_MSG_PAD) . $fileName . "\n" . implode("\n\n", $tagWriter->warnings);
@@ -112,8 +114,11 @@ function setMetadata($file, $tags, $fileName) {
     } else {
     	echo str_pad('Failed to write tags for:', OUTPUT_MSG_PAD) . $fileName . "\n" . implode("\n\n", $tagWriter->errors);
     }
+
+    return $isSucess;
 }
 
+$count = 0;
 $options = getopt(SHORT_OPTS, LONG_OPTS);
 
 $dirParam = getParam($options, 'd', 'dir');
@@ -131,9 +136,12 @@ foreach ($mp3Files as $value) {
     $newFile = copyAndRenameFile($value, $dirParam, $newTags);
     if ($newFile) {
         // Set metadata into new file
-        setMetadata($newFile, $newTags, $value);
+        if(setMetadata($newFile, $newTags, $value)) {
+            $count++;
+        }
     } else {
         echo str_pad('Unable to copy file:', OUTPUT_MSG_PAD) . $value . "\n";
     }
 }
+echo "\n" . $count . ' files have been successfully treated' . "\n";
 ?>
