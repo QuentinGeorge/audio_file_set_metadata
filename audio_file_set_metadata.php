@@ -47,6 +47,8 @@ function getMetaFromFileName($fileName) {
             $regex = $regex . $value . ").+?[\)\]]/i";
         }
     }
+    // Remove album pist number if in begining of file name with - separator
+    $fileName = preg_replace("/^[0-9]+\s*-\s*/", '', $fileName);
     // Remove unexpected tags inside of the name (official video, ...)
     $fileName = preg_replace($regex, '', $fileName);
     // Explode the string at "-" but only at the first occurence
