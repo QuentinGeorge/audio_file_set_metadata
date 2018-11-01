@@ -7,6 +7,7 @@ define('SHORT_OPTS', 'd:h');
 define('LONG_OPTS', array('dir:', 'help'));
 define('FILE_NAME_EXCEPT', array('audio', 'video', 'official')); // Those tags will be removed from file name (ex: [official video])
 define('OUTPUT_DIR', 'done\\');
+define('OUTPUT_MSG_PAD', 30);
 
 function getParam($options, $shortOpts, $longOpts, $default = NULL) {
     foreach ($options as $key => $value) {
@@ -69,13 +70,15 @@ function copyAndRenameFile($file, $srcPath, $tags, $fileExt = '.mp3') {
     if (!is_dir($path)) {
         mkdir($path);
     }
-    copy($file, $path . $newFileName);
-
+    // Copy the file into OUTPUT_DIR or return FALSE if can't
+    if(!copy($file, $path . $newFileName)) {
+        return FALSE;
+    }
     // Return the new file
     return $path . $newFileName;
 }
 
-function setMetadata($file, $tags) {
+function setMetadata($file, $tags, $fileName) {
 // This function use id3 script to write mp3 metadata (https://github.com/JamesHeinrich/getID3)
     $textEncoding = 'UTF-8';
 
@@ -100,12 +103,12 @@ function setMetadata($file, $tags) {
 
     // write tags
     if ($tagWriter->WriteTags()) {
-    	echo "Successfully wrote tags\n";
+    	echo str_pad('Successfully wrote tags for:', OUTPUT_MSG_PAD) . $fileName . "\n";
     	if (!empty($tagWriter->warnings)) {
-    		echo "There were some warnings:\n" . implode("\n\n", $tagWriter->warnings);
+    		echo str_pad('There were some warnings for:', OUTPUT_MSG_PAD) . $fileName . "\n" . implode("\n\n", $tagWriter->warnings);
     	}
     } else {
-    	echo "Failed to write tags!\n" . implode("\n\n", $tagWriter->errors);
+    	echo str_pad('Failed to write tags for:', OUTPUT_MSG_PAD) . $fileName . "\n" . implode("\n\n", $tagWriter->errors);
     }
 }
 
@@ -124,7 +127,11 @@ foreach ($mp3Files as $value) {
     $newTags = getMetaFromFileName($fileName);
     // Copy file into src dir, rename & get new file
     $newFile = copyAndRenameFile($value, $dirParam, $newTags);
-    // Set metadata into new file
-    setMetadata($newFile, $newTags);
+    if ($newFile) {
+        // Set metadata into new file
+        setMetadata($newFile, $newTags, $value);
+    } else {
+        echo str_pad('Unable to copy file:', OUTPUT_MSG_PAD) . $value . "\n";
+    }
 }
 ?>
