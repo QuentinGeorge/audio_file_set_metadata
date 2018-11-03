@@ -8,7 +8,7 @@ Ce script va, pour tous les fichiers .mp3 d'un répertoire&nbsp;:
 
 ## Installation
 1. Installer PHP  
-Pour Windows&nbsp;:[Télécharger PHP](http://php.net/downloads.php) et Extraire le fichier zip à l'emplacement "C:\php"
+[Pour Windows](http://php.net/manual/fr/install.windows.legacy.index.php#install.windows.legacy.commandline)&nbsp;:[Télécharger PHP](https://windows.php.net/download/) et Extraire le fichier zip à l'emplacement "C:\php". Ensuite, [Ajouter le répertoire PHP à la variable système PATH](http://php.net/manual/fr/faq.installation.php#faq.installation.addtopath)
 
 2. Télécharger ce script en cliquant sur "Clone or download" => "Download zip" puis Extraire le fichier zip à l'emplacement voulut
 3. Ouvrir le fichier "audio_file_set_metadata.bat" avec un éditeur de texte et à la ligne 2 "set scriptPath=D:\Projects\audio_file_set_metadata\" modifier la partie après le "=" par le chemin de l'emplacement du répertoire "audio_file_set_metadata"
