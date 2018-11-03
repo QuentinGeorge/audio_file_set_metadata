@@ -5,7 +5,7 @@ require dirname(__FILE__) . '/getid3/write.php';
 
 define('SHORT_OPTS', 'd:h');
 define('LONG_OPTS', array('dir:', 'help'));
-define('FILE_NAME_EXCEPT', array('audio', 'video', 'official')); // Those tags will be removed from file name (ex: [official video])
+define('FILE_NAME_EXCEPT', array('audio', 'video', 'official', 'lyrics')); // Those tags will be removed from file name (ex: [official video])
 define('OUTPUT_DIR', 'done\\');
 define('OUTPUT_MSG_PAD', 30);
 
@@ -44,7 +44,7 @@ function getMetaFromFileName($fileName) {
         if ($key < count(FILE_NAME_EXCEPT) - 1) {
             $regex = $regex . $value . "|";
         } else {
-            $regex = $regex . $value . ").+?[\)\]]/i";
+            $regex = $regex . $value . ").*?[\)\]]/i";
         }
     }
     // Remove album pist number if in begining of file name with - separator
