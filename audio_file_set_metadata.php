@@ -9,6 +9,17 @@ define('FILE_NAME_EXCEPT', array('audio', 'video', 'official', 'lyrics')); // Th
 define('OUTPUT_DIR', 'done\\');
 define('OUTPUT_MSG_PAD', 30);
 
+function printUsage() {
+    echo "Usage: -[OPTION] [VALUE]\n";
+}
+
+function printHelp() {
+    printUsage();
+
+    echo str_pad('-h, -help', 20) . "Print this help\n";
+    echo str_pad('-d, -dir', 20) . "Path to files dir\n";
+}
+
 function getParam($options, $shortOpts, $longOpts, $default = NULL) {
     foreach ($options as $key => $value) {
         if ($key === $shortOpts) {
@@ -125,6 +136,10 @@ $options = getopt(SHORT_OPTS, LONG_OPTS);
 
 $dirParam = getParam($options, 'd', 'dir');
 $helpParam = getParam($options, 'h', 'help');
+
+if (!empty($helpParam)) {
+    exit(printHelp());
+}
 
 // Get mp3 files from a directory
 $mp3Files = getMP3Files($dirParam);
